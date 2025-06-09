@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from model_registery import ModelRegistry
 import torch
-from routes.extract_ddis import router as extract_ddis_router
+from routes.ddis import router as extract_ddis_router
 
 
 from contextlib import asynccontextmanager
