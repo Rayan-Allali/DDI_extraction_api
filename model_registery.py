@@ -1,5 +1,7 @@
 from transformers import  AutoTokenizer
 import torch
+
+from fastapi import Request
 from utils.gat.gat_model import GATModelWithAttention
 from pathlib import Path
 from transformers import BertForTokenClassification, BertTokenizerFast, AutoModelForSequenceClassification, AutoTokenizer
@@ -45,14 +47,14 @@ class ModelRegistry:
             if not ner_model_path.exists():
                 raise FileNotFoundError(f"NER model path not found: {ner_model_path}")
             self.ner_tokenizer = BertTokenizerFast.from_pretrained(ner_model_path)
-            self.ner_model = BertForTokenClassification.from_pretrained(ner_model_path).to(self.device)
+            self.ner_model = BertForTokenClassification.from_pretrained(ner_model_path, device_map=None).to(self.device)
             self.ner_model.eval()
 
             re_biobert_model_path = models_dir / "re_biobert_model"
             if not re_biobert_model_path.exists():
                 raise FileNotFoundError(f"RE BioBERT model path not found: {re_biobert_model_path}")
             self.re_biobert_tokenizer = AutoTokenizer.from_pretrained(re_biobert_model_path)
-            self.re_biobert_model = AutoModelForSequenceClassification.from_pretrained(re_biobert_model_path).to(self.device)
+            self.re_biobert_model = AutoModelForSequenceClassification.from_pretrained(re_biobert_model_path, device_map=None).to(self.device)
             self.re_biobert_model.eval()
 
             gat_model_path = gat_models_dir / models_path_and_args[2]["path"]
@@ -80,10 +82,6 @@ class ModelRegistry:
         except Exception as e:
             raise RuntimeError(f"Failed to initialize models: {str(e)}")
 
-model_registry = None
 
-def get_model_registry():
-    global model_registry
-    if model_registry is None:
-        model_registry = ModelRegistry()
-    return model_registry
+def get_model_registry(request: Request) -> ModelRegistry:
+    return request.app.state.model_registry

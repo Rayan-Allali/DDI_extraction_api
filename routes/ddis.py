@@ -13,7 +13,7 @@ async def extract_ddis_from_input(input: TextInput,models: ModelRegistry = Depen
 
 @router.post("/extract-drugs")
 async def extract_ddis_from_input(input: TextInput,models: ModelRegistry = Depends(get_model_registry)):
-    ner_bio_tags,sentence = predict_ner_drug(sentence,models.ner_model,models.ner_tokenizer,models.device)
+    ner_bio_tags,sentence = predict_ner_drug(sentence=input.text,ner_model=models.ner_model,ner_tokenizer=models.ner_tokenizer,device=models.device)
     result =extracting_drugs(sentence,ner_bio_tags)
     return result
 
