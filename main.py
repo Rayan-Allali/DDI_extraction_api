@@ -15,16 +15,17 @@ async def lifespan(app: FastAPI):
     from model_registery import ModelRegistry
 
     model_registry = ModelRegistry()
-    try:
-        with torch.no_grad():
-            dummy_input = model_registry.ner_tokenizer("test", return_tensors="pt")
-            model_registry.ner_model(**dummy_input)
-            model_registry.re_biobert_model(**dummy_input)
-        model_registry.spacy_nlp("test")
-        model_registry.stanza_nlp("test")
-        app.state.model_registry = model_registry
-    except Exception as e:
-        raise RuntimeError(f"Model warmup failed: {str(e)}")
+    app.state.model_registry = model_registry 
+    # try:
+    #     with torch.no_grad():
+    #         dummy_input = model_registry.ner_tokenizer("test", return_tensors="pt")
+    #         model_registry.ner_model(**dummy_input)
+    #         model_registry.re_biobert_model(**dummy_input)
+    #     model_registry.spacy_nlp("test")
+    #     model_registry.stanza_nlp("test")
+    #     app.state.model_registry = model_registry
+    # except Exception as e:
+    #     raise RuntimeError(f"Model warmup failed: {str(e)}")
     
     yield 
     if model_registry:
@@ -34,6 +35,7 @@ async def lifespan(app: FastAPI):
         del model_registry.word2vec_model
         del model_registry.spacy_nlp
         del model_registry.stanza_nlp
+        torch.cuda.empty_cache()
         torch.cuda.empty_cache()
         model_registry = None
         app.state.model_registry = None

@@ -43,19 +43,19 @@ class ModelRegistry:
 
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             print("self.device  ", self.device )
-            ner_model_path = models_dir / "ner_biobert_model"
-            if not ner_model_path.exists():
-                raise FileNotFoundError(f"NER model path not found: {ner_model_path}")
-            self.ner_tokenizer = BertTokenizerFast.from_pretrained(ner_model_path)
-            self.ner_model = BertForTokenClassification.from_pretrained(ner_model_path, device_map=None).to(self.device)
-            self.ner_model.eval()
-
+            
             re_biobert_model_path = models_dir / "re_biobert_model"
             if not re_biobert_model_path.exists():
                 raise FileNotFoundError(f"RE BioBERT model path not found: {re_biobert_model_path}")
             self.re_biobert_tokenizer = AutoTokenizer.from_pretrained(re_biobert_model_path)
             self.re_biobert_model = AutoModelForSequenceClassification.from_pretrained(re_biobert_model_path, device_map=None).to(self.device)
             self.re_biobert_model.eval()
+            ner_model_path = models_dir / "ner_biobert_model"
+            if not ner_model_path.exists():
+                raise FileNotFoundError(f"NER model path not found: {ner_model_path}")
+            self.ner_tokenizer = BertTokenizerFast.from_pretrained(ner_model_path)
+            self.ner_model = BertForTokenClassification.from_pretrained(ner_model_path, device_map=None).to(self.device)
+            self.ner_model.eval()
 
             gat_model_path = gat_models_dir / models_path_and_args[2]["path"]
             if not gat_model_path.exists():
