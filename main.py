@@ -16,22 +16,11 @@ async def lifespan(app: FastAPI):
 
     model_registry = ModelRegistry()
     app.state.model_registry = model_registry 
-    # try:
-    #     with torch.no_grad():
-    #         dummy_input = model_registry.ner_tokenizer("test", return_tensors="pt")
-    #         model_registry.ner_model(**dummy_input)
-    #         model_registry.re_biobert_model(**dummy_input)
-    #     model_registry.spacy_nlp("test")
-    #     model_registry.stanza_nlp("test")
-    #     app.state.model_registry = model_registry
-    # except Exception as e:
-    #     raise RuntimeError(f"Model warmup failed: {str(e)}")
-    
     yield 
     if model_registry:
         del model_registry.ner_model
         del model_registry.re_biobert_model
-        del model_registry.re_gat_model
+        del model_registry.re_gat_models
         del model_registry.word2vec_model
         del model_registry.spacy_nlp
         del model_registry.stanza_nlp

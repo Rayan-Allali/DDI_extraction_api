@@ -1,26 +1,8 @@
+from utils.ner_utils import extract_drug_entities_from_bio
 def blind_drug_mentions(sentence,ner_bio_tags):
     words = sentence.split()
-    drugs = []
-    word = ""
-    for idx, label in ner_bio_tags.items():
-        if label == "B-DRUG":
-             if word != "":
-                drugs.append(word.strip())
-                word = ""
-             word = words[idx]
-        elif label == "I-DRUG":
-            if word != "":
-              word += f' {words[idx]}'
-        else:
-            if word != "":
-                drugs.append(word.strip())
-                word = ""
+    drugs = extract_drug_entities_from_bio(words, ner_bio_tags)
 
-    if word:
-        drugs.append(word.strip())
-    print(drugs)
-    
-    
     drug_map = {}
     def drug_blinding(sentence, drugs):
         copy_sentence = sentence
@@ -32,7 +14,6 @@ def blind_drug_mentions(sentence,ner_bio_tags):
         return copy_sentence
 
     sentence = drug_blinding(sentence, drugs)
-    print(f'drug_map: {drug_map}')
     if len(drug_map) <= 1:
         print('No DDI found')
         return None
@@ -52,6 +33,8 @@ def extracting_drugs(sentence,ner_bio_tags):
         elif label == "I-DRUG":
             if word != "":
               word += f' {words[idx]}'
+            else:
+               word = words[idx] 
         else:
             if word != "":
                 drugs.append(word.strip())

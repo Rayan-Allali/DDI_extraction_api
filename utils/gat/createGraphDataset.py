@@ -1,16 +1,24 @@
 import torch
 from torch_geometric.data import Data
-from utils.nlp.stanza_utils import extract_dependency_tree_stanford
+from utils.nlp.stanza_utils import deprel_to_scalar,extract_dependency_tree_stanford
 from utils.re_word2vec_embedding import get_word_embeddings_and_tokens_biobert_word2vec
-def sentence_to_graph_stanza_bert_token_word2vec(sentence_from_biobert,x_embeddings,nlp,stanza_nlp):
+def sentence_to_graph_stanza_bert_token_word2vec(sentence_from_biobert,x_embeddings,nlp,stanza_nlp,device):
     doc = nlp(sentence_from_biobert)
     tokens, edges=extract_dependency_tree_stanford(doc,stanza_nlp)
     edge_index = torch.tensor(
             [(child, parent) for child, parent, _ in edges],
             dtype=torch.long
         ).t().contiguous()
-    return Data(x=x_embeddings, edge_index=edge_index, num_nodes=len(tokens)), tokens
-
+    edge_attr = torch.tensor(
+        [deprel_to_scalar.get(deprel, deprel_to_scalar['unk']) for _, _, deprel in edges],
+        dtype=torch.float
+    ).view(-1, 1).to(device)
+    return Data(
+        x=x_embeddings,
+        edge_index=edge_index,
+        edge_attr=edge_attr,
+        num_nodes=len(tokens)
+    ), tokens
 
 def create_graph_dataset(pairs,re_model,re_tokenizer,word2vec_model,word2vec_size,nlp,stanza_nlp,device):
     data_list = []
@@ -19,7 +27,7 @@ def create_graph_dataset(pairs,re_model,re_tokenizer,word2vec_model,word2vec_siz
        sentence = pair.sentence
        embeddings,words,cls_embedding=get_word_embeddings_and_tokens_biobert_word2vec(sentence,re_model,re_tokenizer,word2vec_model,word2vec_size,device)
        sentence_from_biobert=' '.join(words)
-       graph_data, tokens = sentence_to_graph_stanza_bert_token_word2vec(sentence_from_biobert,embeddings,nlp,stanza_nlp)
+       graph_data, tokens = sentence_to_graph_stanza_bert_token_word2vec(sentence_from_biobert,embeddings,nlp,stanza_nlp,device)
        graph_data.biobert_cls = cls_embedding
        graph_data.sentence = sentence
        graph_data.drug1 = pair.drug1

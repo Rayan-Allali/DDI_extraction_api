@@ -17,6 +17,31 @@ label_mapping_reverse = {
 bio_labels = ["B-DRUG", "I-DRUG", "O"]
 
 
+def extract_drug_entities_from_bio(words, ner_bio_tags):
+    drugs = []
+    word = ""
+    for idx, label in ner_bio_tags.items():
+        if label == "B-DRUG":
+             if word != "":
+                drugs.append(word.strip())
+                word = ""
+             word = words[idx]
+        elif label == "I-DRUG":
+            if word != "":
+              word += f' {words[idx]}'
+            else:
+               word = words[idx] 
+        else:
+            if word != "":
+                drugs.append(word.strip())
+                word = ""
+
+    if word:
+        drugs.append(word.strip())
+
+    return drugs
+
+
 def predict_ner_drug(sentence,ner_model,ner_tokenizer,device):
     sentence = sentence.lower()
     sentence=tokenize_with_custom_splits(sentence.lower())
@@ -38,8 +63,8 @@ def predict_ner_drug(sentence,ner_model,ner_tokenizer,device):
     label_map = {0: "O", 1: "B-DRUG", 2: "I-DRUG", -100: "IGNORE"}
     predicted_labels = [label_map[label] for label in predicted_class_ids]
     first_labels = {}
+   
     for token, label, word_id in zip(tokens_decoded, predicted_labels, word_ids):
         if word_id is not None and word_id not in first_labels:
             first_labels[word_id] = label
-
     return first_labels,sentence
